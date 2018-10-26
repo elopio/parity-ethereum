@@ -21,8 +21,9 @@ use std::collections::{VecDeque, BTreeMap, BTreeSet};
 use parking_lot::{Mutex, RwLock, Condvar};
 use ethereum_types::H256;
 use ethkey::Secret;
-use key_server_cluster::{Error, NodeId, SessionId, Requester};
-use key_server_cluster::cluster::{Cluster, ClusterData, ClusterConfiguration, ClusterView};
+use key_server_cluster::{Error, NodeId, SessionId, Requester, NodeKeyPair};
+use key_server_cluster::cluster::{Cluster, ClusterConfiguration, ClusterView};
+use key_server_cluster::cluster_connections::ConnectionProvider;
 use key_server_cluster::connection_trigger::ServersSetChangeSessionCreatorConnector;
 use key_server_cluster::message::{self, Message};
 use key_server_cluster::generation_session::{SessionImpl as GenerationSessionImpl};
@@ -551,19 +552,22 @@ impl ClusterSession for AdminSession {
 		}
 	}
 }
-pub fn create_cluster_view(data: &Arc<ClusterData>, requires_all_connections: bool) -> Result<Arc<Cluster>, Error> {
-	let disconnected_nodes_count = data.connections.disconnected_nodes().len();
+
+pub fn create_cluster_view(self_key_pair: Arc<NodeKeyPair>, connections: Arc<ConnectionProvider>, requires_all_connections: bool) -> Result<Arc<Cluster>, Error> {
+	let mut connected_nodes = connections.connected_nodes()?;
+	let disconnected_nodes = connections.disconnected_nodes();
+
+	let disconnected_nodes_count = disconnected_nodes.len();
 	if requires_all_connections {
 		if disconnected_nodes_count != 0 {
 			return Err(Error::NodeDisconnected);
 		}
 	}
 
-	let mut connected_nodes = data.connections.connected_nodes()?;
-	connected_nodes.insert(data.self_key_pair.public().clone());
+	connected_nodes.insert(self_key_pair.public().clone());
 
 	let connected_nodes_count = connected_nodes.len();
-	Ok(Arc::new(ClusterView::new(data.clone(), connected_nodes, connected_nodes_count + disconnected_nodes_count)))
+	Ok(Arc::new(ClusterView::new(self_key_pair, connections, connected_nodes, connected_nodes_count + disconnected_nodes_count)))
 }
 
 #[cfg(test)]

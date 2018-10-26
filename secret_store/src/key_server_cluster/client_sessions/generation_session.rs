@@ -941,13 +941,11 @@ fn check_threshold(threshold: usize, nodes: &BTreeSet<NodeId>) -> Result<(), Err
 pub mod tests {
 	use std::sync::Arc;
 	use std::collections::{BTreeSet, BTreeMap, VecDeque};
-	use std::time::Duration;
 	use ethereum_types::Address;
 	use ethkey::{Random, Generator, KeyPair};
 	use key_server_cluster::{NodeId, SessionId, Error, KeyStorage, DummyKeyStorage};
 	use key_server_cluster::message::{self, Message, GenerationMessage};
-	use key_server_cluster::cluster::tests::{DummyCluster, make_clusters, run_clusters, loop_until,
-		all_connections_established, new_runtime};
+	use key_server_cluster::cluster::tests::{DummyCluster, make_clusters, loop_until};
 	use key_server_cluster::cluster_sessions::ClusterSession;
 	use key_server_cluster::generation_session::{SessionImpl, SessionState, SessionParams};
 	use key_server_cluster::math;
@@ -1352,27 +1350,15 @@ pub mod tests {
 
 	#[test]
 	fn encryption_session_works_over_network() {
-		const CONN_TIMEOUT: Duration = Duration::from_millis(300);
-		const SESSION_TIMEOUT: Duration = Duration::from_millis(1000);
-
 		let test_cases = [(1, 3)];
 		for &(threshold, num_nodes) in &test_cases {
-			let mut core = new_runtime();
-
 			// prepare cluster objects for each node
-			let clusters = make_clusters(&core, 6031, num_nodes);
-			run_clusters(&clusters);
-
-			// `clusters` contains `Arc<ClusterCore>` and clones will refer to the same cores.
-			let clusters_clone = clusters.clone();
-
-			// establish connections
-			loop_until(&mut core, CONN_TIMEOUT, move || clusters_clone.iter().all(all_connections_established));
+			let (messages, clusters) = make_clusters(num_nodes);
 
 			// run session to completion
 			let session_id = SessionId::default();
 			let session = clusters[0].client().new_generation_session(session_id, Default::default(), Default::default(), threshold).unwrap();
-			loop_until(&mut core, SESSION_TIMEOUT, move || session.joint_public_and_secret().is_some());
+			loop_until(messages, &clusters, move || session.joint_public_and_secret().is_some());
 		}
 	}
 
