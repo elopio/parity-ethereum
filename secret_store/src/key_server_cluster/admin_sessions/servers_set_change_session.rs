@@ -1043,7 +1043,7 @@ fn check_nodes_set(all_nodes_set: &BTreeSet<NodeId>, new_nodes_set: &BTreeSet<No
 
 #[cfg(test)]
 pub mod tests {
-	use std::sync::Arc;
+/*	use std::sync::Arc;
 	use std::collections::{VecDeque, BTreeMap, BTreeSet};
 	use ethkey::{Random, Generator, Public, Signature, KeyPair, sign};
 	use key_server_cluster::{NodeId, SessionId, Error, KeyStorage, DummyKeyStorage};
@@ -1403,5 +1403,5 @@ pub mod tests {
 
 		// check that all sessions have finished
 		assert!(ml.nodes.values().all(|n| n.session.is_finished()));
-	}
+	}*/
 }

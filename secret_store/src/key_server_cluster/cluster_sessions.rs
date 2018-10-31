@@ -159,6 +159,8 @@ pub struct ClusterSessionsContainer<S: ClusterSession, SC: ClusterSessionCreator
 	listeners: Mutex<Vec<Weak<ClusterSessionsListener<S>>>>,
 	/// Sessions container state.
 	container_state: Arc<Mutex<ClusterSessionsContainerState>>,
+	/// Do not actually remove sessions.
+	preserve_sessions: bool,
 	/// Phantom data.
 	_pd: ::std::marker::PhantomData<D>,
 }
@@ -230,6 +232,17 @@ impl ClusterSessions {
 		self.generation_sessions.creator.make_faulty_generation_sessions();
 	}
 
+	#[cfg(test)]
+	pub fn preserve_sessions(&mut self) {
+		self.generation_sessions.preserve_sessions = true;
+		self.encryption_sessions.preserve_sessions = true;
+		self.decryption_sessions.preserve_sessions = true;
+		self.schnorr_signing_sessions.preserve_sessions = true;
+		self.ecdsa_signing_sessions.preserve_sessions = true;
+		self.negotiation_sessions.preserve_sessions = true;
+		self.admin_sessions.preserve_sessions = true;
+	}
+
 	/// Send session-level keep-alive messages.
 	pub fn sessions_keep_alive(&self) {
 		self.admin_sessions.send_keep_alive(&*SERVERS_SET_CHANGE_SESSION_ID, &self.self_node_id);
@@ -273,6 +286,7 @@ impl<S, SC, D> ClusterSessionsContainer<S, SC, D> where S: ClusterSession, SC: C
 			sessions: RwLock::new(BTreeMap::new()),
 			listeners: Mutex::new(Vec::new()),
 			container_state: container_state,
+			preserve_sessions: false,
 			_pd: Default::default(),
 		}
 	}
@@ -380,9 +394,11 @@ impl<S, SC, D> ClusterSessionsContainer<S, SC, D> where S: ClusterSession, SC: C
 	}
 
 	fn do_remove(&self, session_id: &S::Id, sessions: &mut BTreeMap<S::Id, QueuedSession<S>>) {
-		if let Some(session) = sessions.remove(session_id) {
-			self.container_state.lock().on_session_completed();
-			self.notify_listeners(|l| l.on_session_removed(session.session.clone()));
+		if !self.preserve_sessions {
+			if let Some(session) = sessions.remove(session_id) {
+				self.container_state.lock().on_session_completed();
+				self.notify_listeners(|l| l.on_session_removed(session.session.clone()));
+			}
 		}
 	}
 

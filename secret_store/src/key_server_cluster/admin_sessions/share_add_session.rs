@@ -881,7 +881,7 @@ impl SessionTransport for IsolatedSessionTransport {
 
 #[cfg(test)]
 pub mod tests {
-	use std::sync::Arc;
+/*	use std::sync::Arc;
 	use std::collections::{VecDeque, BTreeMap, BTreeSet, HashSet};
 	use ethkey::{Random, Generator, Public, KeyPair, Signature, sign};
 	use ethereum_types::H256;
@@ -1323,5 +1323,5 @@ pub mod tests {
 		assert_eq!(ml.nodes[&master_node_id].session.initialize(Some(ml.version), Some(new_nodes_set),
 			Some(ml.old_set_signature.clone()),
 			Some(ml.new_set_signature.clone())).map(|_| ()), Err(Error::ConsensusUnreachable));
-	}
+	}*/
 }

@@ -807,7 +807,7 @@ impl JobTransport for SigningJobTransport {
 
 #[cfg(test)]
 mod tests {
-	use std::sync::Arc;
+/*	use std::sync::Arc;
 	use std::str::FromStr;
 	use std::collections::{BTreeSet, BTreeMap, VecDeque};
 	use ethereum_types::{Address, H256};
@@ -1288,5 +1288,5 @@ mod tests {
 			Some(Ok(_)) => (),
 			_ => unreachable!(),
 		}
-	}
+	}*/
 }

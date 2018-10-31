@@ -1060,7 +1060,7 @@ impl JobTransport for SigningJobTransport {
 
 #[cfg(test)]
 mod tests {
-	use std::sync::Arc;
+/*	use std::sync::Arc;
 	use std::collections::{BTreeSet, BTreeMap, VecDeque};
 	use ethereum_types::H256;
 	use ethkey::{self, Random, Generator, KeyPair, verify_public, public_to_address};
@@ -1309,5 +1309,5 @@ mod tests {
 			Some(Ok(_)) => (),
 			_ => unreachable!(),
 		}
-	}
+	}*/
 }
